@@ -10,11 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.websocket.server.PathParam;
 
 import org.json.JSONObject;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class ContaController {
@@ -46,26 +43,16 @@ public class ContaController {
 			return new ResponseEntity<>(conta, HttpStatus.OK);
 		}
 		
-		String stringUrl = String.format(
-				"https://www.facebook.com/v3.3/dialog/oauth?client_id={0}&redirect_uri={1}&state={2}", 
-				CLIENT_ID, "localhost:8080/conta/cadastro/" + registros.size() + 1, "ABCD");
-		
+		String facebook_login_url = "https://www.facebook.com/v3.3/dialog/oauth?client_id=%s&redirect_uri=%s&state=%s"; 
+		int new_id = registros.size() + 1;
+		String state = "security_text";
+		String url_to_redirect ="http://localhost:8080/conta/cadastro/" + new_id; 
+		String facebook_login_url_formated = String.format(facebook_login_url, CLIENT_ID, url_to_redirect, state);
 				
-		throw new UnsupportedOperationException("Endpoint01 não implementado");
-		
-		// Endpoint 01:
-		// Verifica se existe alguma Conta com o id igual ao id recebido como parâmetro
-		//
-		// Se o identificador foi encontrado
-		//     Retorna um JSON contendo os dados da conta;
-		//     O status da resposta é um http 200;
-		// 
-		// Caso o identificador não seja encontrado
-		//     O status da resposta é um http redirect 307;
-		//     Adiciona na resposta um cabeçalho "Location", cujo valor é a página de login do facebook com os devidos parâmetros:
-		//         cliente_id: o client_id da aplicação;
-		//         redirect_uri: indica que o facebook deverá redirecionar a aplicação para o Endpoint 02, utilizando o id de entrada;
-		//         state: uma string utilizada para garantir do remetente da mensagem.
+		HttpHeaders headers = new HttpHeaders();
+	    headers.add("Location", facebook_login_url_formated);
+				
+		return new ResponseEntity<>(null, headers, HttpStatus.TEMPORARY_REDIRECT);
 	}
 	
 	@GetMapping("/conta/cadastro/{id}")
